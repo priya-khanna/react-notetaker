@@ -3,66 +3,90 @@
 // create new instance of Firebase and pass it the url where project is located
 // bindAsArray takes 2 args, ref to the firebase, and the property u want to bind the firebase data to
 //inside a function new context is create and this changes
+// to get url params, we were using this.getParams().username,
+// this.router = this.context.router, this.router.getCurrentParams().username
+// this.childRef.child('new_notes').push().set(this.state.notes.concat(['welcome3']));
+// this.childRef.child('new_notes').push().set(['hello']);
 
-var React = require('react');
-import { Router } from 'react-router';
-import UserProfile from './Github/UserProfile';
+//bindToState allows to bind a property on your state to the endpoint in firebase
+// if u dont use supoer(props) and pass props as arg to constuctor , u will get error can't use this keyword inside of a constructor
+// to write to firebase, rebase has base.post(endpoint, {data: x....} ), i.e object which has data property that will have whcih will update the endpoint
+// with arrow syntax => for functions, no need to user .bind(this) since it doesnt create a new context inside of that function
+// we can also replace classes with functions that takes in props and will render
+// const Profile => ({props......}) {
+//   return()
+// }
+// mixins: [Router.State, ReactFireMixin]
+// getInitialState: function(){ return notes: [],}
+
+// Fetching data from firebase
+// this.childRef.child('new_notes').on("value", function(snapshot) {
+//   console.log(snapshot.val());
+// }, function (errorObject) {
+//   console.log("The read failed: " + errorObject.code);
+// });
+
+import React from 'react'
 import Repos from './Github/Repos';
+import UserProfile from './Github/UserProfile';
 import Notes from './Notes/Notes';
-var ReactFireMixin = require('reactFire');
-var Firebase = require('firebase');
-var helpers = require('../utils/helpers')
+import getGithubInfo from '../utils/helpers';
+import Rebase from 're-base';
 
-var Profile  = React.createClass({
-  mixins: [Router.State, ReactFireMixin],
-  getInitialState: function() {
-    return {
+const base = Rebase.createClass('https://blinding-inferno-1823.firebaseio.com/')
+
+
+class Profile extends React.Component {
+  constructor(props){
+    super(props);
+
+    this.state = {
       notes: [],
       bio: {},
       repos: []
     }
-  },
-  init: function() {
-    this.childRef = this.ref.child(this.props.params.username);
-    this.bindAsArray(this.childRef.child('new_notes'), 'notes');
-    // this.childRef.child('new_notes').push().set(this.state.notes.concat(['welcome3']));
-    // this.childRef.child('new_notes').push().set(['hello']);
+  }
 
-    helpers.getGithubInfo(this.props.params.username)
-      .then(function(dataObj){
-        this.setState({
-          repos: dataObj.repos,
-          bio: dataObj.bio
-        });
-       console.log("repos", this.state.repos);
-       console.log("bio", this.state.bio);
-      }.bind(this));
+  init(username){
+  // this.childRef = this.ref.child(username);
+  // this.bindAsArray(this.childRef.child('new_notes'), 'notes');
+  // this.ref = new Firebase('https://blinding-inferno-1823.firebaseio.com/');
+  this.ref = base.bindToState(username, {
+    context: this,
+    asArrray: true,
+    state: 'notes'
+  });
 
+  getGithubInfo(username)
+    .then(function(data){
+      this.setState({
+        bio: data.bio,
+        repos: data.repos
+      })
+    }.bind(this))
+  }
 
-    this.childRef.child('new_notes').on("value", function(snapshot) {
-      console.log(snapshot.val());
-    }, function (errorObject) {
-      console.log("The read failed: " + errorObject.code);
-    });
-  },
+  componentDidMount(){
+    this.init(this.props.params.username)
+  }
+  componentWillReceiveProps(nextProps){
+    // this will be called on route change
+    base.removeBinding(this.ref);
+    this.init(nextProps.params.username);
+  }
+  componentWillUnmount(){
+    // this.unbind('notes');
+    base.removeBinding(this.ref);
+  }
 
-  componentDidMount: function(){
-    this.ref = new Firebase('https://blinding-inferno-1823.firebaseio.com/');
-    this.init();
-  },
-  componentWillUnmount: function(){
-    this.unbind('notes');
-  },
-  handleNewNote: function(newNote){
-    // var new_notes = this.state.notes.concat([[newNote]]);
-    this.childRef.child('new_notes').push().set([newNote]);
-  },
-  componentWillReceiveProps: function(){
-    // when there is route change
-    this.unbind('notes');
-    this.init();
-  },
-  render: function() {
+  handleAddNote(newNote){
+    // this.childRef.child('new_notes').push().set([newNote]);
+    base.post(this.props.params.username, {
+      data: this.state.notes.concat([newNote])
+    })
+  }
+
+  render(){
     var username = this.props.params.username;
     return (
       <div className="row">
@@ -73,10 +97,13 @@ var Profile  = React.createClass({
           <Repos username={username} repos={this.state.repos} />
         </div>
         <div className="col-md-4">
-          <Notes username={username} notes={this.state.notes} addNote={this.handleNewNote} />
+          <Notes
+            username={username}
+            notes={this.state.notes}
+            addNote={this.handleAddNote.bind(this)} />
         </div>
       </div>
-    );
+    )
   }
-});
-module.exports = Profile;
+}
+export default Profile;

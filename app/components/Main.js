@@ -3,28 +3,28 @@
 
 // which component to render and where to render to. Its gonna select the 'test' div and replace it with the ui inside renderder property
 
-var React = require('react');
-var ReactDOM = require('react-dom')
-var SearchGithub = require('./SearchGithub')
+import React from 'react';
+import SearchGithub from './SearchGithub'
 
-var Main  = React.createClass({
-  render: function() {
-    return (
-      <div className="main-container">
-        <nav className="navbar navbar-default" role="navigation">
-          <div className="col-sm-7 col-sm-offset-2" style={{marginTop: 15}}>
-            <SearchGithub />
-          </div>
-        </nav>
-        <div className="container">
-          {this.props.children}
+const Main = ({children, history}) => {
+  return (
+    <div className="main-container">
+      <nav className="navbar navbar-default" role="navigation">
+        <div className="col-sm-7 col-sm-offset-2" style={{marginTop: 15}}>
+          <SearchGithub history={history}/>
         </div>
+      </nav>
+      <div className="container">
+        {children}
+
       </div>
-    );
-  }
-});
+    </div>
+  )
+}
+
+export default Main
+// {this.props.children}
 // React.render(<Main />, document.getElementById('example'));
-module.exports = Main;
 
 
 

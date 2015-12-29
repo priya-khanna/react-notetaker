@@ -10,7 +10,6 @@ ReactDOM.render(
   <Router>{routes}</Router>,
   document.getElementById('example')
 )
-
 // Router.run(routes, (Root, state){
 //   React.render(<Root {...state}/> document.getElementById('example'));
 // });
