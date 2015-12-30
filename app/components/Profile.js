@@ -53,10 +53,9 @@ class Profile extends React.Component {
   // this.ref = new Firebase('https://blinding-inferno-1823.firebaseio.com/');
   this.ref = base.bindToState(username, {
     context: this,
-    asArrray: true,
-    state: 'notes'
+    state: 'notes',
+    asArray: true
   });
-
   getGithubInfo(username)
     .then(function(data){
       this.setState({
@@ -71,6 +70,7 @@ class Profile extends React.Component {
   }
   componentWillReceiveProps(nextProps){
     // this will be called on route change
+    console.log("url changed");
     base.removeBinding(this.ref);
     this.init(nextProps.params.username);
   }

@@ -1,5 +1,10 @@
 import React from 'react';
-import Router from 'react-router';
+import { createHistory, useBasename } from 'history'
+import {Router, History} from 'react-router';
+
+const history = useBasename(createHistory)({
+  basename: '/'
+})
 
 class SearchGithub extends React.Component {
   getRef(ref){

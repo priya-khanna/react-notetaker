@@ -16,7 +16,6 @@ const Main = ({children, history}) => {
       </nav>
       <div className="container">
         {children}
-
       </div>
     </div>
   )
